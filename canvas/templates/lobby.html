@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobby</title>
+</head>
+<body>
+    <h1>Lobby</h1>
+    <a href="{% url 'canvas:canvas' %}">Go to Canvas</a>
+<!-- Form to add a user to the lobby -->
+<form method="post">
+    {% csrf_token %}
+    <select name="user_id">
+      {% for user in users %}
+        <option value="{{ user.id }}">{{ user.username }}</option>
+      {% endfor %}
+    </select>
+    <select name="role">
+      <option value="admin">Admin</option>
+      <option value="member">Member</option>
+      <!-- Add more roles if needed -->
+    </select>
+    <button type="submit">Add User</button>
+  </form>
+  
+  <!-- Form to change a user's role in the lobby -->
+  <form method="post">
+    {% csrf_token %}
+    <select name="user_id">
+      {% for user in users %}
+        <option value="{{ user.id }}">{{ user.username }}</option>
+      {% endfor %}
+    </select>
+    <select name="new_role">
+      <option value="admin">Admin</option>
+      <option value="member">Member</option>
+      <!-- Add more roles if needed -->
+    </select>
+    <button type="submit">Change Role</button>
+  </form>
+  
+  <!-- Display the list of users in the lobby -->
+  <h2>Users in Lobby:</h2>
+  <ul>
+    {% for user in lobby.users.all %}
+      <li>{{ user.username }} - Role: {{ lobby.roles.user.id}}</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
+  
