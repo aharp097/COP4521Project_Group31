@@ -43,7 +43,7 @@ def create_lobby(request):
     if request.method == 'POST':
         form = CreateLobbyForm(request.POST)
         if form.is_valid():
-            lobby_name = form.cleaned_data['name']
+            lobby_name = form.cleaned_data['lobby_name']
 
             existing_lobby = Lobby.objects.filter(name=lobby_name).first()
             if existing_lobby:
@@ -51,7 +51,7 @@ def create_lobby(request):
             else:
                 try:
                     lobby = Lobby.objects.create(name=lobby_name, creator=request.user)
-                    return redirect('canvas:lobby', lobby_id=lobby.id)
+                    return redirect('canvas:lobby', lobby_name=lobby.name)
                 except IntegrityError:
                     form.add_error('name', 'A lobby with this name already exists.')
 
@@ -69,18 +69,21 @@ def join_lobby(request):
         except Lobby.DoesNotExist:
             return render(request, 'join_lobby.html', {'error': 'Lobby not found.'})
 
-        return redirect('canvas:lobby', lobby_id=lobby.id)
+        return redirect('canvas:lobby', lobby_name=lobby.name)
 
     return render(request, 'join_lobby.html')
 
 @login_required
-def canvas_view(request):
-    return render(request, 'canvas.html')
+def canvas_view(request, lobby_name):
+    lobby = get_object_or_404(Lobby, name=lobby_name)
+    canvas = lobby.canvas
+
+    return render(request, 'canvas.html', {'lobby': lobby, 'canvas': canvas})
 
 
 
-def lobby_view(request, lobby_id):
-    lobby = get_object_or_404(Lobby, id=lobby_id)
+def lobby_view(request, lobby_name):
+    lobby = get_object_or_404(Lobby, name=lobby_name)
 
     users = lobby.users.all()
 
@@ -100,4 +103,4 @@ def lobby_view(request, lobby_id):
 
         users = lobby.users.all()
 
-    return render(request, 'lobby.html', {'users': users, 'lobby': lobby, 'is_creator': is_creator})
+    return render(request, 'lobby.html', {'lobby': lobby, 'users': users, 'is_creator': is_creator})
