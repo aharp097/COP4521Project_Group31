@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Art Creator</title>
+    <title>Canvas: {{ lobby.name }}</title>
     <script src="https://unpkg.com/fabric@5.3.0/dist/fabric.min.js"></script>
 </head>
 <style>
@@ -28,6 +28,7 @@
 </style>
 <body>
     <body>
+    <h1>Canvas: {{ lobby.name }}</h1>
     <input type="color" id="colorPicker" value="#000000" style="margin: 20px;">
     <button id="brush">Brush</button>
     <button id="eraser">Eraser</button>
@@ -42,10 +43,10 @@
             
         </ul>
     </div>
-    <a href="{% url 'lobby:lobby' %}">Go to Lobby</a>
+    <a href="{% url 'lobby:lobby' lobby_name=lobby.name%}">Go to Lobby</a>
     <ul>
-        <li><a href="{% url 'home' %}">Home</a></li>
-        <li><a href="{% url 'logout' %}">Logout</a></li>  
+        <li><a href="{% url 'canvas:home' %}">Home</a></li>
+        <li><a href="{% url 'canvas:logout' %}">Logout</a></li>  
     </ul>
 
     <script>
