@@ -7,7 +7,7 @@
     <h2>Join Lobby</h2>
     <form method="post">
         {% csrf_token %}
-        <input type="text" name="lobby_id" placeholder="Enter Lobby ID" required>
+        <input type="text" name="lobby_name" placeholder="Enter Lobby Name" required>
         <button type="submit">Join Lobby</button>
     </form>
     {% if error %}
