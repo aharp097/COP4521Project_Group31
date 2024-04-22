@@ -12,8 +12,8 @@ class Canvas(models.Model):
         return self.name
 
 class Lobby(models.Model):
-    canvas = models.OneToOneField(Canvas, on_delete=models.CASCADE)
-    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+    canvas = models.OneToOneField(Canvas, on_delete=models.CASCADE, null=True, blank=True, default='')
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, default='')
     name = models.CharField(max_length=255)
     users = models.ManyToManyField(User, related_name='lobbies')
     roles = models.JSONField(default=dict)
