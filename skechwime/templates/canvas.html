@@ -6,7 +6,28 @@
     <title>Pixel Art Creator</title>
     <script src="https://unpkg.com/fabric@5.3.0/dist/fabric.min.js"></script>
 </head>
+<style>
+    #userList {
+        width: 200px;
+        background-color: #f9f9f9;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 20px;
+    }
+    #userList h3 {
+        margin-top: 0;
+    }
+    #userList ul {
+        list-style-type: none;
+        padding: 0;
+    }
+    #userList li {
+        padding: 5px;
+        border-bottom: 1px solid #ddd;
+    }
+</style>
 <body>
+    <body>
     <input type="color" id="colorPicker" value="#000000" style="margin: 20px;">
     <button id="brush">Brush</button>
     <button id="eraser">Eraser</button>
@@ -15,6 +36,18 @@
     <button id="save">Save as Image</button>
     <div id="colorHistory" style="margin-top: 20px;"></div>
     <canvas id="pixelCanvas" width="500" height="500"></canvas>
+    <div id="userList">
+        <h3>User Lobby</h3>
+        <ul id="users">
+            
+        </ul>
+    </div>
+    <a href="{% url 'lobby:lobby' %}">Go to Lobby</a>
+    <ul>
+        <li><a href="{% url 'home' %}">Home</a></li>
+        <li><a href="{% url 'logout' %}">Logout</a></li>  
+    </ul>
+
     <script>
 document.addEventListener('DOMContentLoaded', function () {
     var canvas = new fabric.Canvas('pixelCanvas', {
@@ -151,6 +184,23 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('colorPicker').value = brushColor;
         }
     }
+    function updateUserLobby(users) {
+                var userList = document.getElementById('users');
+                userList.innerHTML = ''; 
+                users.forEach(function(user) {
+                    var li = document.createElement('li');
+                    li.textContent = user.username + ' - Role: ' + user.role;
+                    userList.appendChild(li);
+                });
+            }
+
+            // Sample data (you'll need to replace this with actual data)
+            var users = [
+                { username: 'user1', role: 'admin' },
+                { username: 'user2', role: 'member' },
+                { username: 'user3', role: 'guest' }
+            ];
+
 });
     </script>
 </body>
