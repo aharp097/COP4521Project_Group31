@@ -16,7 +16,7 @@ def login_view(request):
         form = AuthenticationForm(request, request.POST)
         if form.is_valid():
             login(request, form.get_user())
-            return redirect('home') 
+            return redirect('canvas:home') 
     else:
         form = AuthenticationForm()
     return render(request, 'login.html', {'form': form})
@@ -27,14 +27,14 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('home')
+            return redirect('canvas:home')
     else:
         form = UserCreationForm()
     return render(request, 'signup.html', {'form': form})
 
 def logout_view(request):
     logout(request)
-    return redirect('home')
+    return redirect('canvas:home')
 
 
 @login_required
@@ -45,7 +45,7 @@ def create_lobby(request):
             lobby_name = form.cleaned_data['name']
             lobby = Lobby.objects.create(name=lobby_name, creator=request.user)
 
-            return redirect('lobby', lobby_id=lobby.id)
+            return redirect('canvas:lobby', lobby_id=lobby.id)
     else:
         form = CreateLobbyForm()
     
