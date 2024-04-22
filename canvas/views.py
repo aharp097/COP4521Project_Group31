@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import login, logout
 from .forms import CreateLobbyForm
+from django.db import IntegrityError
 # Create your views here.
 
 def home_view(request):
@@ -43,9 +44,17 @@ def create_lobby(request):
         form = CreateLobbyForm(request.POST)
         if form.is_valid():
             lobby_name = form.cleaned_data['name']
-            lobby = Lobby.objects.create(name=lobby_name, creator=request.user)
 
-            return redirect('canvas:lobby', lobby_id=lobby.id)
+            existing_lobby = Lobby.objects.filter(name=lobby_name).first()
+            if existing_lobby:
+                form.add_error('name', 'A lobby with this name already exists.')
+            else:
+                try:
+                    lobby = Lobby.objects.create(name=lobby_name, creator=request.user)
+                    return redirect('canvas:lobby', lobby_id=lobby.id)
+                except IntegrityError:
+                    form.add_error('name', 'A lobby with this name already exists.')
+
     else:
         form = CreateLobbyForm()
     
@@ -54,12 +63,14 @@ def create_lobby(request):
 @login_required
 def join_lobby(request):
     if request.method == 'POST':
-        lobby_id = request.POST.get('lobby_id')
+        lobby_name = request.POST.get('lobby_name')
         try:
-            lobby = Lobby.objects.get(id=lobby_id)
+            lobby = Lobby.objects.get(name=lobby_name)
         except Lobby.DoesNotExist:
-            return render(request, 'join_lobby.html', {'error': 'Lobby does not exist.'})
-        return redirect('canvas_page', lobby_id=lobby.id)
+            return render(request, 'join_lobby.html', {'error': 'Lobby not found.'})
+
+        return redirect('canvas:lobby', lobby_id=lobby.id)
+
     return render(request, 'join_lobby.html')
 
 @login_required
