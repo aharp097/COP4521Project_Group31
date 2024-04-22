@@ -9,9 +9,7 @@
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Create Lobby</button>
-        {% if form.errors %}
-        <p style="color: red;">{{ form.errors }}</p>
-        {% endif %}
+       
     </form>
 </body>
 </html>
