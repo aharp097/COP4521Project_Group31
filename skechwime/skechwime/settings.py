@@ -27,8 +27,17 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+ASGI_APPLICATION = 'skechwime.asgi.application'
 # Application definition
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -38,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'canvas',
+    'channels',
     'debug_toolbar'
 ]
 
