@@ -67,31 +67,62 @@ document.addEventListener('DOMContentLoaded', function () {
     var showGrid = true; // Initially show the grid
     var gridLines = [];
 
+        // WebSocket setup
+    const lobbyName = "{{ lobby.name }}";
+    const socket = new WebSocket(`ws://${window.location.host}/ws/canvas/${lobbyName}/`);
+
+    socket.onopen = function(event) {
+        console.log("WebSocket is open now.");
+    };
+
+    socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        console.log("Message received from server:", event.data);
+        if (data.action !== 'pick') {
+            drawOrErase(data, false);
+        }
+    };
+
+    socket.onerror = function(event) {
+        console.error("WebSocket error observed: ", event);
+    };
+
+    socket.onclose = function(event) {
+        console.log("WebSocket is closed now.");
+    };
+
     function drawGrid() {
-        gridLines.forEach(line => canvas.remove(line)); // Remove old grid lines if they exist
-        gridLines = [];
-        for (let i = 0; i <= 500; i += grid) {
-            // Vertical lines
-            var verticalLine = new fabric.Line([i, 0, i, 500], {
-                stroke: '#ccc',
-                selectable: false,
-                evented: false
+        if (gridLines.length === 0) {
+            // Initially create grid lines if they don't exist
+            for (let i = 0; i <= 500; i += grid) {
+                var verticalLine = new fabric.Line([i, 0, i, 500], {
+                    stroke: '#ccc',
+                    selectable: false,
+                    evented: false,
+                    visible: showGrid
+                });
+                var horizontalLine = new fabric.Line([0, i, 500, i], {
+                    stroke: '#ccc',
+                    selectable: false,
+                    evented: false,
+                    visible: showGrid
+                });
+                canvas.add(verticalLine);
+                canvas.add(horizontalLine);
+                gridLines.push(verticalLine, horizontalLine);
+            }
+        } else {
+            // Toggle existing grid lines visibility
+            gridLines.forEach(line => {
+                line.set({ stroke: line.stroke === 'transparent' ? '#ccc' : 'transparent' });
             });
-            // Horizontal lines
-            var horizontalLine = new fabric.Line([0, i, 500, i], {
-                stroke: '#ccc',
-                selectable: false,
-                evented: false
-            });
-            canvas.add(verticalLine, horizontalLine);
-            gridLines.push(verticalLine, horizontalLine);
         }
         canvas.requestRenderAll();
     }
 
     function toggleGrid() {
-        gridLines.forEach(line => line.visible = showGrid);
-        canvas.requestRenderAll();
+        showGrid = !showGrid;
+        drawGrid();  // Call drawGrid to toggle the visibility
     }
 
     drawGrid(); // Initial grid drawing
@@ -142,13 +173,13 @@ document.addEventListener('DOMContentLoaded', function () {
             pickColor(options);
         } else {
             isDrawing = true;
-            drawOrErase(options);
+            drawOrErase(options, true);
         }
     });
 
     canvas.on('mouse:move', function (options) {
         if (isDrawing && mode !== 'pick') {
-            drawOrErase(options);
+            drawOrErase(options, true);
         }
     });
 
@@ -156,27 +187,39 @@ document.addEventListener('DOMContentLoaded', function () {
         isDrawing = false;
     });
 
-    function drawOrErase(options) {
+    function drawOrErase(options, sendToServer) {
         var pointer = canvas.getPointer(options.e);
         var x = Math.floor(pointer.x / grid) * grid;
         var y = Math.floor(pointer.y / grid) * grid;
+        var action = mode;
+        var color = brushColor;
+
+        if (sendToServer) {
+            console.log("Sending message to server:", JSON.stringify({ action: action, x: x, y: y, color: color }));
+            socket.send(JSON.stringify({ action: action, x: x, y: y, color: color }));
+        }
+
         var objects = canvas.getObjects('rect');
         let obj = objects.find(o => o.left === x && o.top === y);
-        if (!obj) {
+        if (!obj && action === 'draw') {
             obj = new fabric.Rect({
                 left: x,
                 top: y,
                 width: grid,
                 height: grid,
-                fill: brushColor,
+                fill: color,
                 selectable: false,
                 hasControls: false,
                 hasBorders: false,
                 evented: false
             });
             canvas.add(obj);
-        } else {
-            obj.set('fill', mode === 'erase' ? 'transparent' : brushColor);
+        } else if (obj) {
+            if (action === 'erase') {
+                canvas.remove(obj);
+            } else if (action === 'draw') {
+                obj.set('fill', color);
+            }
         }
         canvas.renderAll();
     }
