@@ -77,8 +77,9 @@ def join_lobby(request):
 def canvas_view(request, lobby_name):
     lobby = get_object_or_404(Lobby, name=lobby_name)
     canvas = lobby.canvas
-
-    return render(request, 'canvas.html', {'lobby': lobby, 'canvas': canvas})
+    users = lobby.users.all()
+    is_creator = request.user == lobby.creator
+    return render(request, 'canvas.html', {'lobby': lobby, 'canvas': canvas, 'users': users, 'is_creator': is_creator})
 
 
 
@@ -86,7 +87,6 @@ def lobby_view(request, lobby_name):
     lobby = get_object_or_404(Lobby, name=lobby_name)
 
     users = lobby.users.all()
-
     is_creator = request.user == lobby.creator
 
     if request.method == 'POST':
