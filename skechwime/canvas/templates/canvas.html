@@ -25,49 +25,52 @@
         padding: 5px;
         border-bottom: 1px solid #ddd;
     }
+    .active {
+        background-color: #ddd;
+    }
 </style>
 <body>
-    <body>
-    <h1>Canvas: {{ lobby.name }}</h1>
-    <input type="color" id="colorPicker" value="#000000" style="margin: 20px;">
-    <button id="brush">Brush</button>
-    <button id="eraser">Eraser</button>
-    <button id="eyedropper">Eyedropper</button>
-    <button id="toggleGrid">Toggle Grid</button>
-    <button id="save">Save as Image</button>
-    <div id="colorHistory" style="margin-top: 20px;"></div>
-    <canvas id="pixelCanvas" width="500" height="500"></canvas>
-    <div id="userList">
-        <h3>User Lobby</h3>
-        <ul id="users">
-            {% for user in users %}
-                <li>{{ user.username }} - Role: {{ user.role }}</li>
-            {% endfor %}
-                <li>{{ lobby.creator.username }} (Creator) - Role: Owner</li>
-            
-        </ul>
-    </div>
-    <a href="{% url 'lobby:lobby' lobby_name=lobby.name%}">Go to Lobby</a>
-    <ul>
-        <li><a href="{% url 'canvas:home' %}">Home</a></li>
-        <li><a href="{% url 'canvas:logout' %}">Logout</a></li>  
+<h1>Canvas: {{ lobby.name }}</h1>
+<input type="color" id="colorPicker" value="#000000" style="margin: 20px;">
+<button id="brush">Brush</button>
+<button id="eraser">Eraser</button>
+<button id="eyedropper">Eyedropper</button>
+<button id="toggleGrid">Toggle Grid</button>
+<button id="save">Save as Image</button>
+<div id="colorHistory" style="margin-top: 20px;"></div>
+<canvas id="pixelCanvas" width="500" height="500"></canvas>
+<div id="userList">
+    <h3>User Lobby</h3>
+    <ul id="users">
+        {% for user in users %}
+        <li>{{ user.username }} - Role: {{ user.role }}</li>
+        {% endfor %}
+        <li>{{ lobby.creator.username }} (Creator) - Role: Owner</li>
     </ul>
+</div>
+<a href="{% url 'lobby:lobby' lobby_name=lobby.name %}">Go to Lobby</a>
+<ul>
+    <li><a href="{% url 'canvas:home' %}">Home</a></li>
+    <li><a href="{% url 'canvas:logout' %}">Logout</a></li>
+</ul>
 
-    <script>
+<script>
 document.addEventListener('DOMContentLoaded', function () {
     var canvas = new fabric.Canvas('pixelCanvas', {
         selection: false,
-        perPixelTargetFind: true,  // This makes targeting more accurate
-        targetFindTolerance: 4     // This increases the area for targeting objects
+        perPixelTargetFind: true,
+        targetFindTolerance: 4
     });
+
     var isDrawing = false;
     var grid = 20;
     var brushColor = document.getElementById('colorPicker').value;
     var mode = 'draw'; // Modes: 'draw', 'erase', 'pick'
     var showGrid = true; // Initially show the grid
     var gridLines = [];
+    drawGrid(); // Initial grid drawing
 
-        // WebSocket setup
+    // WebSocket setup
     const lobbyName = "{{ lobby.name }}";
     const socket = new WebSocket(`ws://${window.location.host}/ws/canvas/${lobbyName}/`);
 
@@ -77,19 +80,117 @@ document.addEventListener('DOMContentLoaded', function () {
 
     socket.onmessage = function(event) {
         const data = JSON.parse(event.data);
-        console.log("Message received from server:", event.data);
         if (data.action !== 'pick') {
-            drawOrErase(data, false);
+            applyDrawOrEraseFromServer(data);
         }
     };
 
-    socket.onerror = function(event) {
-        console.error("WebSocket error observed: ", event);
-    };
 
-    socket.onclose = function(event) {
-        console.log("WebSocket is closed now.");
-    };
+    // Tool buttons setup
+    document.getElementById('toggleGrid').addEventListener('click', function() {
+        showGrid = !showGrid;
+        toggleGrid();
+    });
+
+    document.getElementById('colorPicker').addEventListener('change', function() {
+        brushColor = this.value;
+        if (mode !== 'pick') {
+            mode = 'draw';
+        }
+    });
+
+    document.getElementById('brush').addEventListener('click', function() {
+        mode = 'draw';
+    });
+
+    document.getElementById('eraser').addEventListener('click', function() {
+        mode = 'erase';
+    });
+
+    document.getElementById('eyedropper').addEventListener('click', function() {
+        mode = 'pick';
+    });
+
+    document.getElementById('save').addEventListener('click', function() {
+        saveCanvas();
+    });
+
+    canvas.on('mouse:down', function (options) {
+        if (mode === 'pick') {
+            pickColor(options);
+        } else {
+            isDrawing = true;
+            drawOrErase(options);
+        }
+    });
+
+    canvas.on('mouse:move', function (options) {
+        if (isDrawing && mode !== 'pick') {
+            drawOrErase(options);
+        }
+    });
+
+    canvas.on('mouse:up', function () {
+        isDrawing = false;
+    });
+
+    function applyDrawOrEraseFromServer(data) {
+        console.log("Applying server data:", data);
+        var x = data.x;
+        var y = data.y;
+        var color = data.color;
+        var action = data.action;
+
+        applyDrawing(x, y, color, action);
+}
+   function drawOrErase(options) {
+        var pointer = canvas.getPointer(options.e);
+        var x = Math.floor(pointer.x / grid) * grid;
+        var y = Math.floor(pointer.y / grid) * grid;
+        var action = mode;
+        var color = brushColor;
+
+        console.log("Sending message to server:", JSON.stringify({ action: action, x: x, y: y, color: color }));
+        socket.send(JSON.stringify({ action: action, x: x, y: y, color: color }));
+
+        applyDrawing(x, y, color, action);
+}
+
+    function applyDrawing(x, y, color, action) {
+        var objects = canvas.getObjects('rect');
+        let obj = objects.find(o => o.left === x && o.top === y);
+        if (!obj && action === 'draw') {
+            obj = new fabric.Rect({
+                left: x,
+                top: y,
+                width: grid,
+                height: grid,
+                fill: color,
+                selectable: false,
+                hasControls: false,
+                hasBorders: false,
+                evented: false
+            });
+            canvas.add(obj);
+        } else if (obj) {
+            if (action === 'erase') {
+                canvas.remove(obj);
+            } else if (action === 'draw') {
+                obj.set('fill', color);
+            }
+        }
+        canvas.renderAll();
+    }
+
+
+    function pickColor(options) {
+            var pointer = canvas.getPointer(options.e);
+            var obj = canvas.getObjects('rect').find(o => o.containsPoint(pointer) && o.fill !== 'transparent');
+            if (obj) {
+                brushColor = obj.fill;
+                document.getElementById('colorPicker').value = brushColor;
+            }
+     }
 
     function drawGrid() {
         if (gridLines.length === 0) {
@@ -125,36 +226,9 @@ document.addEventListener('DOMContentLoaded', function () {
         drawGrid();  // Call drawGrid to toggle the visibility
     }
 
-    drawGrid(); // Initial grid drawing
-
-    document.getElementById('toggleGrid').addEventListener('click', function() {
-        showGrid = !showGrid;
-        toggleGrid();
-    });
-
-    document.getElementById('colorPicker').addEventListener('change', function() {
-        brushColor = this.value;
-        if (mode !== 'pick') {
-            mode = 'draw';
-        }
-    });
-
-    document.getElementById('brush').addEventListener('click', function() {
-        mode = 'draw';
-    });
-
-    document.getElementById('eraser').addEventListener('click', function() {
-        mode = 'erase';
-    });
-
-    document.getElementById('eyedropper').addEventListener('click', function() {
-        mode = 'pick';
-    });
-
-    document.getElementById('save').addEventListener('click', function() {
+    function saveCanvas() {
         gridLines.forEach(line => line.visible = false); // Hide grid for saving
         canvas.requestRenderAll();
-
         var dataURL = canvas.toDataURL({
             format: 'png',
             quality: 1.0
@@ -163,93 +237,10 @@ document.addEventListener('DOMContentLoaded', function () {
         link.href = dataURL;
         link.download = 'my-pixel-art.png';
         link.click();
-
         gridLines.forEach(line => line.visible = showGrid); // Restore grid visibility
         canvas.requestRenderAll();
-    });
-
-    canvas.on('mouse:down', function (options) {
-        if (mode === 'pick') {
-            pickColor(options);
-        } else {
-            isDrawing = true;
-            drawOrErase(options, true);
-        }
-    });
-
-    canvas.on('mouse:move', function (options) {
-        if (isDrawing && mode !== 'pick') {
-            drawOrErase(options, true);
-        }
-    });
-
-    canvas.on('mouse:up', function () {
-        isDrawing = false;
-    });
-
-    function drawOrErase(options, sendToServer) {
-        var pointer = canvas.getPointer(options.e);
-        var x = Math.floor(pointer.x / grid) * grid;
-        var y = Math.floor(pointer.y / grid) * grid;
-        var action = mode;
-        var color = brushColor;
-
-        if (sendToServer) {
-            console.log("Sending message to server:", JSON.stringify({ action: action, x: x, y: y, color: color }));
-            socket.send(JSON.stringify({ action: action, x: x, y: y, color: color }));
-        }
-
-        var objects = canvas.getObjects('rect');
-        let obj = objects.find(o => o.left === x && o.top === y);
-        if (!obj && action === 'draw') {
-            obj = new fabric.Rect({
-                left: x,
-                top: y,
-                width: grid,
-                height: grid,
-                fill: color,
-                selectable: false,
-                hasControls: false,
-                hasBorders: false,
-                evented: false
-            });
-            canvas.add(obj);
-        } else if (obj) {
-            if (action === 'erase') {
-                canvas.remove(obj);
-            } else if (action === 'draw') {
-                obj.set('fill', color);
-            }
-        }
-        canvas.renderAll();
     }
-
-    function pickColor(options) {
-        var pointer = canvas.getPointer(options.e);
-        var obj = canvas.getObjects('rect').find(o => o.containsPoint(pointer) && o.fill !== 'transparent');
-        if (obj) {
-            brushColor = obj.fill;
-            document.getElementById('colorPicker').value = brushColor;
-        }
-    }
-    function updateUserLobby(users) {
-                var userList = document.getElementById('users');
-                userList.innerHTML = ''; 
-                users.forEach(function(user) {
-                    var li = document.createElement('li');
-                    li.textContent = user.username + ' - Role: ' + user.role;
-                    userList.appendChild(li);
-                });
-            }
-
-            // Sample data (you'll need to replace this with actual data)
-            var users = [
-                { username: 'user1', role: 'admin' },
-                { username: 'user2', role: 'member' },
-                { username: 'user3', role: 'guest' }
-            ];
-
 });
-    </script>
+</script>
 </body>
 </html>
