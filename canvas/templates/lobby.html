@@ -10,11 +10,14 @@
     <h2>Users in Lobby:</h2>
     <ul>
         {% for user in users %}
-            <li>{{ user.username }} - Role: {{ user.role }}</li>
+            {% if is_creator %}
+                <li>{{ user.username }} - User ID: {{ user.id }} - Role: {{ user.role }}</li>
+            {% else %}
+                <li>{{ user.username }} - Role: {{ user.role }}</li>
+            {% endif %}
         {% endfor %}
+        <li>{{ lobby.creator.username }} (Creator) - Role: Owner</li>
     </ul>
-
-    <h1>Lobby</h1>
     <a href="{% url 'canvas:canvas' lobby_name=lobby.name %}">Go to Canvas</a>
 
     {% if is_creator %}
