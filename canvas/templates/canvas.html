@@ -40,6 +40,10 @@
     <div id="userList">
         <h3>User Lobby</h3>
         <ul id="users">
+            {% for user in users %}
+                <li>{{ user.username }} - Role: {{ user.role }}</li>
+            {% endfor %}
+                <li>{{ lobby.creator.username }} (Creator) - Role: Owner</li>
             
         </ul>
     </div>
