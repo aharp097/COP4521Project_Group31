@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Join Lobby</title>
+</head>
+<body>
+    <h2>Join Lobby</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="lobby_name" placeholder="Enter Lobby Name" required>
+        <button type="submit">Join Lobby</button>
+    </form>
+    {% if error %}
+        <p>{{ error }}</p>
+    {% endif %}
+</body>
+</html>

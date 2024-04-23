@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lobby</title>
+</head>
+<body>
+    <h1>Lobby: {{ lobby.name }}</h1>
+
+    
+    <h2>Users in Lobby:</h2>
+    <ul>
+        {% for user in users %}
+            {% if is_creator %}
+                <li>{{ user.username }} - User ID: {{ user.id }} - Role: {% if user_id in user_roles %}{{ user_roles.user_id }}{% endif %}</li>
+            {% else %}
+                <li>{{ user.username }} - Role: {% if user_id in user_roles %}{{ user_roles.user_id }}{% endif %}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <a href="{% url 'canvas:canvas' lobby_name=lobby.name %}">Go to Canvas</a>
+
+    {% if is_creator %}
+    <h2>Change User Role</h2>
+    <form method="post">
+        {% csrf_token %}
+        <label for="user_id">User ID:</label>
+        <input type="text" name="user_id" required>
+        <label for="new_role">New Role:</label>
+        <input type="text" name="new_role" required>
+        <button type="submit">Change Role</button>
+    </form>
+    {% endif %}
+</body>
+</html>
+
+
+
+  
