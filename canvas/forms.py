@@ -12,4 +12,4 @@ class SignupForm(UserCreationForm):
         fields = ['username', 'password1', 'password2']
 
 class CreateLobbyForm(forms.Form):
-    name = forms.CharField(max_length=255, label='Lobby Name')
+    lobby_name = forms.CharField(max_length=255, label='Lobby Name')
