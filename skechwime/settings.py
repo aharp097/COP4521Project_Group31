@@ -99,16 +99,9 @@ LOGIN_REDIRECT_URL = 'canvas'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-DATABASES = {
     'default': dj_database_url.config(
         # Replace this value with your local database's connection string.
-        default='postgresql://postgres:postgres@localhost:5432/skechwime',
+        default='postgres://skechwimedb_user:NK42rRVRIDrr0T0BR81yRvWgYjQEji5o@dpg-cooj2cf109ks739a0h30-a/skechwimedb',
         conn_max_age=600
     )
 }
