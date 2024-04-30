@@ -16,6 +16,7 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+REDIS_URL = os.getenv('REDIS_URL', 'redis://default_host:6379') 
 DEBUG = False
 STATIC_URL = '/static/'
 if not DEBUG:
@@ -43,7 +44,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [(REDIS_URL)],
+            "hosts": [(REDIS_URL,)],
         },
     },
 }
