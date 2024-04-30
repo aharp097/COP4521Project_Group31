@@ -34,7 +34,7 @@ SECRET_KEY = 'django-insecure-i!#tx@j=0^7r^a$@ldowscrt!9rrila%0)ma9f6h1+x4ymk1d$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [cop4521project-group31.onrender.com]
+ALLOWED_HOSTS = ['cop4521project-group31.onrender.com']
 
 ASGI_APPLICATION = 'skechwime.asgi.application'
 # Application definition
