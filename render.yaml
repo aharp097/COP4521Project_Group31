@@ -1,7 +1,7 @@
 databases:
   - name: skechwime
     plan: free
-    databaseName: skechwime
+    databaseName: skechwimedb
     user: skechwime
 
 services:
