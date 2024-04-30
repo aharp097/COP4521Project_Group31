@@ -43,7 +43,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('redis://red-cooknfgl5elc738j96qg:6379')],
+            "hosts": [('REDIS_URL')],
         },
     },
 }
