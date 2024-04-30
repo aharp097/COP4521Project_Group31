@@ -19,14 +19,17 @@ class Lobby(models.Model):
     roles = models.JSONField(default=dict)
 
     def add_user(self, user, role):
+        """
+        Add a user to the lobby with the specified role.
+        """
         self.users.add(user)
-        self.roles[str(user.id)] = role
+        self.roles[user.id] = role
         self.save()
 
     def change_role(self, user, new_role):
+        """
+        Change the role of an existing user in the lobby.
+        """
         if user.id in self.roles:
-            self.roles[str(user.id)] = new_role
+            self.roles[user.id] = new_role
             self.save()
-
-    def get_user_role(self, user_id):
-        return self.roles.get(str(user_id))
